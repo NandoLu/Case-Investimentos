@@ -106,8 +106,7 @@ export default function ClientsPage() {
       if (values.id) {
         // Edição de cliente existente: usa PUT e precisa do ID
         // --- MUDANÇA AQUI: Use a variável BACKEND_URL ---
-        await axios.put(`<span class="math-inline">\{BACKEND\_URL\}/clients/</span>{values.id}`, values);
-        alert('Cliente atualizado com sucesso!');
+        await axios.put(`${BACKEND_URL}/clients/${values.id}`, values);        alert('Cliente atualizado com sucesso!');
       } else {
         // Cadastro de novo cliente: usa POST, ID é gerado pelo backend
         const { id, ...dataToCreate } = values;
@@ -128,7 +127,7 @@ export default function ClientsPage() {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
       try {
         // --- MUDANÇA AQUI: Use a variável BACKEND_URL ---
-        await axios.delete(`<span class="math-inline">\{BACKEND\_URL\}/clients/</span>{id}`);
+        await axios.delete(`${BACKEND_URL}/clients/${id}`);
         alert('Cliente excluído com sucesso!');
         queryClient.invalidateQueries({ queryKey: ['clients'] });
         setEditingClient(null);
