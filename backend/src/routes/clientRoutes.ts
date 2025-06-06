@@ -1,29 +1,26 @@
 // backend/src/routes/clientRoutes.ts
-import { FastifyInstance } from 'fastify';
-import { z } from 'zod'; // Para validação
-import { ZodTypeProvider } from 'fastify-type-provider-zod'; // Se estiver usando fastify-zod
 
-// Esquema de validação para criação/edição de cliente (deve ser o mesmo do frontend)
+import { FastifyInstance } from 'fastify';
+import { z } from 'zod';
+import { ZodTypeProvider } from 'fastify-type-provider-zod';
+
+// Esquema de validação para o corpo das requisições de cliente (criação/edição).
 const clientBodySchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório.'),
   email: z.string().email('Email inválido.').min(1, 'Email é obrigatório.'),
   status: z.boolean(),
 });
 
-// Esquema para parâmetros de rota (ID)
+// Esquema para validação do ID do cliente nos parâmetros da rota.
 const clientIdParamSchema = z.object({
-  id: z.string().uuid('ID inválido.').optional(), // ID para PUT/DELETE
+  id: z.string().uuid('ID inválido.').optional(),
 });
 
-// Função para registrar as rotas de cliente
-// O tipo FastifyInstance com ZodTypeProvider permite usar os schemas Zod diretamente
+// Função para registrar as rotas de cliente no Fastify.
 const clientRoutes = async (fastify: FastifyInstance) => {
-  // Usando ZodTypeProvider se você o tiver configurado, caso contrário, remova.
-  // Se não estiver usando fastify-zod, remova `<{ Params: { id: string } }>` e use `request.params.id` diretamente,
-  // e remova o `schema` do `get`, `post`, `put`, `delete`.
-  const app = fastify.withTypeProvider<ZodTypeProvider>(); // Se estiver usando fastify-type-provider-zod
+  const app = fastify.withTypeProvider<ZodTypeProvider>();
 
-  // Rota para listar todos os clientes (GET /clients)
+  // Rota: Listar todos os clientes (GET /clients)
   app.get('/clients', async (request, reply) => {
     try {
       const clients = await app.prisma.client.findMany();
@@ -34,18 +31,13 @@ const clientRoutes = async (fastify: FastifyInstance) => {
     }
   });
 
-  // Rota para buscar um cliente por ID (GET /clients/:id)
+  // Rota: Buscar cliente por ID (GET /clients/:id)
   app.get('/clients/:id', {
-    schema: {
-      params: clientIdParamSchema,
-    },
+    schema: { params: clientIdParamSchema },
   }, async (request, reply) => {
     const { id } = request.params;
     try {
-      const client = await app.prisma.client.findUnique({
-        where: { id },
-      });
-
+      const client = await app.prisma.client.findUnique({ where: { id } });
       if (!client) {
         return reply.status(404).send({ message: 'Cliente não encontrado.' });
       }
@@ -56,17 +48,13 @@ const clientRoutes = async (fastify: FastifyInstance) => {
     }
   });
 
-  // Rota para criar um novo cliente (POST /clients)
+  // Rota: Criar novo cliente (POST /clients)
   app.post('/clients', {
-    schema: {
-      body: clientBodySchema,
-    },
+    schema: { body: clientBodySchema },
   }, async (request, reply) => {
     const { name, email, status } = request.body;
     try {
-      const newClient = await app.prisma.client.create({
-        data: { name, email, status },
-      });
+      const newClient = await app.prisma.client.create({ data: { name, email, status } });
       return reply.status(201).send(newClient); // 201 Created
     } catch (error: any) {
       app.log.error(error);
@@ -77,7 +65,7 @@ const clientRoutes = async (fastify: FastifyInstance) => {
     }
   });
 
-  // Rota para atualizar um cliente existente (PUT /clients/:id)
+  // Rota: Atualizar cliente existente (PUT /clients/:id)
   app.put('/clients/:id', {
     schema: {
       params: clientIdParamSchema,
@@ -94,7 +82,7 @@ const clientRoutes = async (fastify: FastifyInstance) => {
       return reply.send(updatedClient);
     } catch (error: any) {
       app.log.error(error);
-      if (error.code === 'P2025') { // Prisma error code for record not found for update
+      if (error.code === 'P2025') { // Cliente não encontrado.
         return reply.status(404).send({ message: 'Cliente não encontrado para atualização.' });
       }
       if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
@@ -104,21 +92,17 @@ const clientRoutes = async (fastify: FastifyInstance) => {
     }
   });
 
-  // Rota para excluir um cliente (DELETE /clients/:id)
+  // Rota: Excluir cliente (DELETE /clients/:id)
   app.delete('/clients/:id', {
-    schema: {
-      params: clientIdParamSchema,
-    },
+    schema: { params: clientIdParamSchema },
   }, async (request, reply) => {
     const { id } = request.params;
     try {
-      await app.prisma.client.delete({
-        where: { id },
-      });
-      return reply.status(204).send(); // 204 No Content for successful deletion
+      await app.prisma.client.delete({ where: { id } });
+      return reply.status(204).send(); // 204 No Content
     } catch (error: any) {
       app.log.error(error);
-      if (error.code === 'P2025') { // Prisma error code for record not found for delete
+      if (error.code === 'P2025') { // Cliente não encontrado.
         return reply.status(404).send({ message: 'Cliente não encontrado para exclusão.' });
       }
       return reply.status(500).send({ message: 'Erro ao excluir cliente.' });
@@ -126,4 +110,4 @@ const clientRoutes = async (fastify: FastifyInstance) => {
   });
 };
 
-export default clientRoutes;
+export default clientRoutes; // Exporta as rotas.

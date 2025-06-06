@@ -1,49 +1,50 @@
-"use strict";
-// backend/src/server.ts
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
+import prismaPlugin from './plugins/prisma';
+import clientRoutes from './routes/clientRoutes';
+import assetRoutes from './routes/assetRoutes';
+
+// Inicializa o servidor Fastify com logger.
+const fastify = Fastify({
+  logger: true
+});
+
+// Configura os compiladores do Zod para validação e serialização de schemas.
+fastify.setValidatorCompiler(validatorCompiler);
+fastify.setSerializerCompiler(serializerCompiler);
+
+// Registra o plugin Fastify CORS para permitir requisições do frontend.
+fastify.register(cors, {
+  origin: 'http://localhost:3001', // Permite requisições do frontend.
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos HTTP permitidos.
+  allowedHeaders: ['Content-Type', 'Authorization'], // Headers permitidos.
+});
+
+// Registra o plugin Prisma para conexão com o banco de dados.
+fastify.register(prismaPlugin);
+
+// Registra as rotas de clientes.
+fastify.register(clientRoutes);
+// Registra as rotas de ativos.
+fastify.register(assetRoutes);
+
+// Rota de teste simples.
+fastify.get('/', async (request, reply) => {
+  return { hello: 'world' };
+});
+
+// Função para iniciar o servidor.
+const start = async () => {
+  try {
+    // Inicia o servidor Fastify na porta 3000.
+    await fastify.listen({ port: 3000, host: '0.0.0.0' });
+    console.log('Backend listening on port 3000');
+  } catch (err) {
+    // Loga erros e encerra o processo em caso de falha ao iniciar.
+    fastify.log.error(err);
+    process.exit(1);
+  }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const fastify_1 = __importDefault(require("fastify"));
-const cors_1 = __importDefault(require("@fastify/cors"));
-const fastify_type_provider_zod_1 = require("fastify-type-provider-zod");
-const prisma_1 = __importDefault(require("./plugins/prisma"));
-const clientRoutes_1 = __importDefault(require("./routes/clientRoutes"));
-const assetRoutes_1 = __importDefault(require("./routes/assetRoutes")); // <-- ADICIONE ESTA LINHA para importar as rotas de ativos
-const fastify = (0, fastify_1.default)({
-    logger: true
-});
-fastify.setValidatorCompiler(fastify_type_provider_zod_1.validatorCompiler);
-fastify.setSerializerCompiler(fastify_type_provider_zod_1.serializerCompiler);
-fastify.register(cors_1.default, {
-    origin: 'http://localhost:3001',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-});
-fastify.register(prisma_1.default);
-fastify.register(clientRoutes_1.default);
-fastify.register(assetRoutes_1.default); // <-- ADICIONE ESTA LINHA para registrar as rotas de ativos
-// Rota de teste (você pode manter ou remover, não interfere)
-fastify.get('/', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
-    return { hello: 'world' };
-}));
-const start = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield fastify.listen({ port: 3000, host: '0.0.0.0' });
-        console.log('Backend listening on port 3000');
-    }
-    catch (err) {
-        fastify.log.error(err);
-        process.exit(1);
-    }
-});
-start();
+
+start(); // Chama a função para iniciar o servidor.

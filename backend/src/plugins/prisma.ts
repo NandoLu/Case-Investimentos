@@ -1,9 +1,7 @@
-// backend/src/plugins/prisma.ts
 import { FastifyPluginAsync } from 'fastify';
 import { PrismaClient } from '@prisma/client';
-import fp from 'fastify-plugin'; // Importe fastify-plugin
+import fp from 'fastify-plugin';
 
-// Estenda a interface FastifyInstance para incluir o cliente Prisma
 declare module 'fastify' {
   interface FastifyInstance {
     prisma: PrismaClient;
