@@ -1,0 +1,43 @@
+/* frontend/src/app/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Cores base */
+  --color-white: #ffffff;
+  --color-dark-blue: #002f5a;
+  --color-light-gray: #f0f0f0; 
+  --color-text-dark: #333333; 
+
+  /* Cores do ShadCN UI (ajustadas para harmonizar com o tema) */
+  --background: var(--color-white);
+  --foreground: var(--color-text-dark); /* Cor de texto padrão */
+
+  --primary: var(--color-dark-blue); /* Cor principal para botões e links */
+  --primary-foreground: var(--color-text-light); /* Cor do texto em elementos primary */
+
+  --secondary: var(--color-light-gray); /* Cor secundária, para elementos de fundo */
+  --secondary-foreground: var(--color-text-dark); /* Cor do texto em elementos secondary */
+
+  --card: var(--color-white);
+  --card-foreground: var(--color-text-dark);
+
+  --popover: var(--color-white);
+  --popover-foreground: var(--color-text-dark);
+
+  --border: #e2e8f0; /* Um cinza neutro para bordas */
+  --input: #e2e8f0;
+  --ring: var(--color-dark-blue);
+
+  --radius: 0.5rem; /* Raio padrão para elementos ShadCN */
+}
+
+/* Removendo a parte de tema inline e dark mode padrão, já que você pediu branco/azul */
+/* Se quiser dark mode no futuro, reintroduza as media queries e variáveis */
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+}
