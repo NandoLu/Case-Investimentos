@@ -1,13 +1,12 @@
-// frontend/src/app/clients/page.tsx
 'use client';
 
 import { Metadata } from 'next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'; // Adicionado useMutation e useQueryClient
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod'; // Importe corretamente
+import { zodResolver } from '@hookform/resolvers/zod';
 
 // Importe os componentes ShadCN
 import { Button } from '@/components/ui/button';
@@ -39,77 +38,59 @@ interface Client {
 }
 
 // Esquema de validação com Zod para o formulário de cliente
-// NOTA IMPORTANTE: A validação do Zod é para o payload que você envia,
-// enquanto o defaultValues do useForm define o estado inicial do formulário.
-// Aqui, 'status' será um booleano obrigatório no payload final, mas no formulário,
-// se o default for true, ele já será inicializado como booleano.
 const clientFormSchema = z.object({
-  id: z.string().optional(), // ID é opcional para cadastro, obrigatório para edição
+  id: z.string().optional(),
   name: z.string().min(1, 'Nome é obrigatório.'),
   email: z.string().email('Email inválido.').min(1, 'Email é obrigatório.'),
-  // O status é um booleano e o formulário o tratará como tal.
-  // O .default(true) é mais para quando o schema é usado para parsing de dados de entrada,
-  // mas aqui para o formulário, o defaultValues do useForm é mais relevante para o estado inicial.
   status: z.boolean(),
 });
 
-// A inferência do Zod para os valores do formulário
 type ClientFormValues = z.infer<typeof clientFormSchema>;
 
-// Se você precisar de um tipo para os valores padrão do formulário que
-// podem incluir campos que são opcionalmente undefined antes de serem preenchidos,
-// você pode usar Partial<ClientFormValues> ou definir um tipo específico para defaults.
-// No entanto, com o schema acima, ClientFormValues já reflete o que o formulário *deve* ter para ser válido.
+// --- NOVO: Defina a URL do backend usando a variável de ambiente ---
+// Use process.env.NEXT_PUBLIC_BACKEND_URL
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+// Se o backend não estiver definido, você pode querer adicionar um fallback ou erro
+// para depuração em caso de ambiente mal configurado.
+if (!BACKEND_URL) {
+  console.error("Variável de ambiente NEXT_PUBLIC_BACKEND_URL não definida!");
+  // Opcional: throw new Error("Backend URL not configured!");
+}
 
-// export const metadata: Metadata = {
-//   title: 'Gerenciar Clientes',
-//   description: 'Página para cadastrar, listar e editar clientes.',
-// };
 
 export default function ClientsPage() {
-  const queryClient = useQueryClient(); // Para invalidar o cache do React Query
+  const queryClient = useQueryClient();
   const [editingClient, setEditingClient] = useState<Client | null>(null);
 
-  // Configuração do formulário com React Hook Form e Zod
   const form = useForm<ClientFormValues>({
     resolver: zodResolver(clientFormSchema),
-    // Defina defaultValues com base no tipo ClientFormValues
     defaultValues: {
-      id: undefined, // Garante que o ID é undefined inicialmente para novos cadastros
+      id: undefined,
       name: '',
       email: '',
-      status: true, // Define o valor padrão para o checkbox
+      status: true,
     },
-    // No Strict Mode do TypeScript, o zodResolver precisa de uma pequena ajuda
-    // para inferir os tipos corretamente em alguns cenários.
-    // O erro 'Type 'undefined' is not assignable to type 'boolean'.' pode vir daqui.
-    // Uma forma de contornar é garantir que o tipo `ClientFormValues` não tenha campos opcionalmente undefined onde o Zod espera algo concreto.
-    // Ou usar `z.boolean().default(true)` para o `status` no schema Zod, que já está lá.
-    // O erro pode estar em como o `reset` ou `defaultValues` está sendo aplicado.
   });
 
   // Busca de clientes com React Query
   const { data: clients, isLoading, error } = useQuery<Client[]>({
     queryKey: ['clients'],
     queryFn: async () => {
-      const response = await axios.get<Client[]>('http://localhost:3000/clients');
+      // --- MUDANÇA AQUI: Use a variável BACKEND_URL ---
+      const response = await axios.get<Client[]>(`${BACKEND_URL}/clients`);
       return response.data;
     },
   });
 
-  // Efeito para preencher o formulário ao editar um cliente
   useEffect(() => {
     if (editingClient) {
-      // Quando preenche para edição, o 'id' é um string.
-      // O 'status' do cliente (boolean) deve ser mapeado diretamente para o campo do formulário.
       form.reset({
         id: editingClient.id,
         name: editingClient.name,
         email: editingClient.email,
-        status: editingClient.status, // Garanta que é boolean
+        status: editingClient.status,
       });
     } else {
-      // Para um novo cadastro, resete para os valores padrão, incluindo ID opcional.
       form.reset({
         id: undefined,
         name: '',
@@ -119,24 +100,24 @@ export default function ClientsPage() {
     }
   }, [editingClient, form]);
 
-
   // Função para lidar com a submissão do formulário (criar ou editar)
   const onSubmit = async (values: ClientFormValues) => {
     try {
       if (values.id) {
         // Edição de cliente existente: usa PUT e precisa do ID
-        await axios.put(`http://localhost:3000/clients/${values.id}`, values);
+        // --- MUDANÇA AQUI: Use a variável BACKEND_URL ---
+        await axios.put(`<span class="math-inline">\{BACKEND\_URL\}/clients/</span>{values.id}`, values);
         alert('Cliente atualizado com sucesso!');
       } else {
         // Cadastro de novo cliente: usa POST, ID é gerado pelo backend
-        // Remove o ID antes de enviar, já que é um novo cadastro e o backend vai gerar um.
         const { id, ...dataToCreate } = values;
-        await axios.post('http://localhost:3000/clients', dataToCreate);
+        // --- MUDANÇA AQUI: Use a variável BACKEND_URL ---
+        await axios.post(`${BACKEND_URL}/clients`, dataToCreate);
         alert('Cliente cadastrado com sucesso!');
       }
-      queryClient.invalidateQueries({ queryKey: ['clients'] }); // Invalida o cache para buscar dados atualizados
-      setEditingClient(null); // Limpa o formulário de edição
-      form.reset({ id: undefined, name: '', email: '', status: true }); // Reseta os campos do formulário para o estado inicial
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      setEditingClient(null);
+      form.reset({ id: undefined, name: '', email: '', status: true });
     } catch (err: any) {
       alert('Erro ao salvar cliente: ' + (err.response?.data?.message || err.message));
     }
@@ -146,10 +127,11 @@ export default function ClientsPage() {
   const handleDelete = async (id: string) => {
     if (confirm('Tem certeza que deseja excluir este cliente?')) {
       try {
-        await axios.delete(`http://localhost:3000/clients/${id}`);
+        // --- MUDANÇA AQUI: Use a variável BACKEND_URL ---
+        await axios.delete(`<span class="math-inline">\{BACKEND\_URL\}/clients/</span>{id}`);
         alert('Cliente excluído com sucesso!');
-        queryClient.invalidateQueries({ queryKey: ['clients'] }); // Invalida o cache
-        setEditingClient(null); // Limpa o formulário se o cliente excluído estiver sendo editado
+        queryClient.invalidateQueries({ queryKey: ['clients'] });
+        setEditingClient(null);
       } catch (err: any) {
         alert('Erro ao excluir cliente: ' + (err.response?.data?.message || err.message));
       }

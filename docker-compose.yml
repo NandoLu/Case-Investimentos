@@ -3,24 +3,31 @@ version: '3.8'
 services:
   db:
     image: mysql:8.0
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 123456 # Mude para uma senha mais forte em produção!
+      MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: investimentos_db
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+    healthcheck: # <-- ADICIONE ESTA SEÇÃO
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"] # Verifica se o MySQL está respondendo
+      timeout: 20s # Tempo limite para a verificação
+      retries: 10 # Quantas vezes tentar
+      interval: 3s # Intervalo entre as tentativas
 
   backend:
-    build: ./backend # Onde está o Dockerfile do seu backend
+    build: ./backend
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: mysql://root:root_password_segura@db:3306/investimentos_db
+      DATABASE_URL: mysql://root:123456@db:3306/investimentos_db
     depends_on:
-      - db
+      db: # <-- Mude aqui para "service_healthy"
+        condition: service_healthy # Garante que o DB esteja saudável antes de iniciar o backend
     volumes:
-      - ./backend:/app # Mapeia sua pasta de código para dentro do contêiner para hot-reloading em desenvolvimento
+      - ./backend:/app
 
 volumes:
   db_data:

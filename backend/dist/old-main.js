@@ -14,36 +14,33 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fastify_1 = __importDefault(require("fastify"));
-const cors_1 = __importDefault(require("@fastify/cors"));
-// Importe os compiladores do Zod para Fastify
-const fastify_type_provider_zod_1 = require("fastify-type-provider-zod");
-const prisma_1 = __importDefault(require("./plugins/prisma")); // <-- Adicione esta linha
-const clientRoutes_1 = __importDefault(require("./routes/clientRoutes")); // <-- Adicione esta linha
+const cors_1 = __importDefault(require("@fastify/cors")); // <-- Importe o plugin fastify-cors
 const fastify = (0, fastify_1.default)({
     logger: true
 });
-// Adicione os compiladores do Zod para Fastify
-fastify.setValidatorCompiler(fastify_type_provider_zod_1.validatorCompiler);
-fastify.setSerializerCompiler(fastify_type_provider_zod_1.serializerCompiler);
 // Registre o plugin fastify-cors
 fastify.register(cors_1.default, {
-    origin: 'http://localhost:3001',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: 'http://localhost:3001', // O frontend Next.js está na porta 3001
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos HTTP que seu backend aceita
+    // headers: ['Content-Type', 'Authorization'], // Opcional: Se precisar de cabeçalhos customizados
+    // credentials: true, // Opcional: Se estiver usando cookies/autenticação com credenciais
 });
-// REGISTRE O PLUGIN PRISMA AQUI
-fastify.register(prisma_1.default); // <-- Adicione esta linha
-// REGISTRE AS ROTAS DE CLIENTES AQUI
-fastify.register(clientRoutes_1.default); // <-- Adicione esta linha (sem prefixo por enquanto, para combinar com o frontend)
-// Se você quiser um prefixo como /api, use: fastify.register(clientRoutes, { prefix: '/api' });
-// Mas, se usar, lembre-se de ajustar a URL no frontend para '/api/clients'.
-// Rota de teste (você pode manter ou remover, não interfere)
+// Seus endpoints (rotas) virão aqui
 fastify.get('/', (request, reply) => __awaiter(void 0, void 0, void 0, function* () {
     return { hello: 'world' };
 }));
+// Exemplo de rota de clientes (quando você criar):
+// fastify.get('/clients', async (request, reply) => {
+//   // ... lógica para buscar clientes
+//   return { clients: [] }; // Exemplo
+// });
+// fastify.post('/clients', async (request, reply) => { /* ... */ });
+// fastify.put('/clients/:id', async (request, reply) => { /* ... */ });
+// fastify.delete('/clients/:id', async (request, reply) => { /* ... */ });
 const start = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        yield fastify.listen({ port: 3000, host: '0.0.0.0' });
+        // A porta 3000 será exposta pelo Docker
+        yield fastify.listen({ port: 3000, host: '0.0.0.0' }); // Use '0.0.0.0' para Fastify dentro do Docker
         console.log('Backend listening on port 3000');
     }
     catch (err) {
