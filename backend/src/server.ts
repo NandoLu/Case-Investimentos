@@ -2,33 +2,28 @@
 
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-// Importe os compiladores do Zod para Fastify
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
-import prismaPlugin from './plugins/prisma'; // <-- Adicione esta linha
-import clientRoutes from './routes/clientRoutes'; // <-- Adicione esta linha
+import prismaPlugin from './plugins/prisma';
+import clientRoutes from './routes/clientRoutes';
+import assetRoutes from './routes/assetRoutes'; // <-- ADICIONE ESTA LINHA para importar as rotas de ativos
 
 const fastify = Fastify({
   logger: true
 });
 
-// Adicione os compiladores do Zod para Fastify
 fastify.setValidatorCompiler(validatorCompiler);
 fastify.setSerializerCompiler(serializerCompiler);
 
-// Registre o plugin fastify-cors
 fastify.register(cors, {
   origin: 'http://localhost:3001',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 });
 
-// REGISTRE O PLUGIN PRISMA AQUI
-fastify.register(prismaPlugin); // <-- Adicione esta linha
+fastify.register(prismaPlugin);
 
-// REGISTRE AS ROTAS DE CLIENTES AQUI
-fastify.register(clientRoutes); // <-- Adicione esta linha (sem prefixo por enquanto, para combinar com o frontend)
-// Se você quiser um prefixo como /api, use: fastify.register(clientRoutes, { prefix: '/api' });
-// Mas, se usar, lembre-se de ajustar a URL no frontend para '/api/clients'.
+fastify.register(clientRoutes);
+fastify.register(assetRoutes); // <-- ADICIONE ESTA LINHA para registrar as rotas de ativos
 
 // Rota de teste (você pode manter ou remover, não interfere)
 fastify.get('/', async (request, reply) => {
