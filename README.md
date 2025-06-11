@@ -43,7 +43,7 @@ Antes de iniciar o projeto, certifique-se de ter as seguintes ferramentas instal
 ### 1. Clonar o Repositório
 
 ```bash
-git clone <URL_DO_SEU_REPOSITORIO>
+git clone <URL_DO_REPOSITORIO>
 cd caseInvestimentos
 ```
 
@@ -100,7 +100,7 @@ caseInvestimentos/
 
 ---
 
-## 📦 Entregáveis Concluídos
+## 📦 Entregáveis
 
 - Repositórios organizados para frontend e backend
 - Script de migração inicial:  
